@@ -21,7 +21,6 @@ const DivisionTable = () => {
         const response = await getDivisions({
           name: searchTerm,
         });
-        console.log(response);
         setDivisions(response.data.data.divisions);
       } catch (error) {
         console.error(error);

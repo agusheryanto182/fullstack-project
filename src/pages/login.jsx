@@ -42,7 +42,6 @@ export default function Login() {
         password: formData.password,
       });
 
-      console.log(response);
       const token = response.data.data.token;
       localStorage.setItem("token", token);
       localStorage.setItem("adminName", response.data.data.admin.name);

@@ -22,7 +22,6 @@ export default function AddEmployee({
     const fetchDivisions = async () => {
       try {
         const response = await getDivisions();
-        console.log(response);
         setDivisions(response.data.data.divisions);
       } catch (error) {
         console.error(error);
@@ -55,23 +54,21 @@ export default function AddEmployee({
     setAlertType("success");
 
     try {
-      const response = await createEmployee(newEmployee);
-      console.log("create employee response: ", response);
+      await createEmployee(newEmployee);
+      onTotalEmployees(totalEmployees + 1);
+      setShowPopup(false);
+      onAddEmployee();
+      setNewEmployee({
+        id: "",
+        name: "",
+        image: "",
+        phone: "",
+        division: "",
+        position: "",
+      });
     } catch (error) {
       console.error(error);
     }
-
-    // onTotalEmployees(updatedEmployees.length);
-    setShowPopup(false);
-    onAddEmployee(newEmployeeData);
-    setNewEmployee({
-      id: "",
-      name: "",
-      image: "",
-      phone: "",
-      division: "",
-      position: "",
-    });
   };
 
   const closeAlert = () => {

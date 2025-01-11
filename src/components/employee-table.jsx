@@ -4,8 +4,13 @@ import Pagination from "./pagination";
 import SearchBar from "./search-bar";
 import CustomAlert from "./custom-alert";
 import { getEmployees, updateEmployee, deleteEmployee } from "../api/api";
+import axios from "axios";
 
-const EmployeeTable = ({ onUpdateEmployee, onUpdateTotalEmployees }) => {
+const EmployeeTable = ({
+  onUpdateEmployee,
+  onUpdateTotalEmployees,
+  employees,
+}) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(
     searchParams.get("search") || ""
@@ -21,7 +26,6 @@ const EmployeeTable = ({ onUpdateEmployee, onUpdateTotalEmployees }) => {
   const [alertMessage, setAlertMessage] = useState(null);
   const [typeAlert, setTypeAlert] = useState("");
   const divisions = JSON.parse(localStorage.getItem("divisions")) || [];
-  const [employees, setEmployees] = useState([]);
 
   useEffect(() => {
     fetchEmployees();
@@ -32,7 +36,7 @@ const EmployeeTable = ({ onUpdateEmployee, onUpdateTotalEmployees }) => {
       const response = await getEmployees({
         name: searchTerm,
       });
-      setEmployees(response.data.data.employees);
+      onUpdateEmployee(response.data.data.employees);
     } catch (error) {
       console.error("Error fetching employees:", error);
     }
@@ -76,13 +80,14 @@ const EmployeeTable = ({ onUpdateEmployee, onUpdateTotalEmployees }) => {
     } catch (error) {
       setAlertMessage("Terjadi kesalahan saat menghapus karyawan");
       setTypeAlert("error");
+    } finally {
+      fetchEmployees();
     }
   };
 
   const handleUpdateEmployee = async (updatedEmployee) => {
     if (
       !updatedEmployee.name ||
-      !updatedEmployee.email ||
       !updatedEmployee.phone ||
       !updatedEmployee.division ||
       !updatedEmployee.position
@@ -93,8 +98,37 @@ const EmployeeTable = ({ onUpdateEmployee, onUpdateTotalEmployees }) => {
     }
 
     try {
-      await updateEmployee(updatedEmployee.id, updatedEmployee);
+      const hasImage = updatedEmployee.image;
 
+      let response;
+      if (hasImage) {
+        const formData = new FormData();
+        for (const key in updatedEmployee) {
+          formData.append(key, updatedEmployee[key]);
+        }
+
+        response = await axios.post(
+          `https://www.sukisushi.works/api/employees/${updatedEmployee.id}`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+      } else {
+        response = await axios.put(
+          `https://www.sukisushi.works/api/employees/${updatedEmployee.id}`,
+          updatedEmployee,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+      }
       const updatedEmployees = employees.map((employee) =>
         employee.id === updatedEmployee.id
           ? { ...employee, ...updatedEmployee }
@@ -107,6 +141,7 @@ const EmployeeTable = ({ onUpdateEmployee, onUpdateTotalEmployees }) => {
 
       onUpdateEmployee(updatedEmployees);
     } catch (error) {
+      console.log(error);
       setAlertMessage("Terjadi kesalahan saat memperbarui data");
       setTypeAlert("error");
       setShowEditPopup(false);
@@ -156,22 +191,10 @@ const EmployeeTable = ({ onUpdateEmployee, onUpdateTotalEmployees }) => {
     };
   }, []);
 
-  // useEffect(() => {
-  //   setSearchTerm(searchParams.get("search") || "");
-  //   const currentPage = parseInt(searchParams.get("page")) || 1;
-  //   if (currentPage > totalPages) {
-  //     setCurrentPage(totalPages);
-  //     setSearchParams({ search: searchTerm, page: totalPages });
-  //   }
-  // }, [searchParams, totalPages]);
   useEffect(() => {
     setSearchTerm(searchParams.get("search") || "");
     setCurrentPage(parseInt(searchParams.get("page")) || 1);
   }, [searchParams]);
-
-  console.log("employees", employees);
-  console.log("filteredEmployee", filteredEmployee);
-  console.log("currentData", currentData);
 
   return (
     <div className="p-6 bg-white dark:bg-black">
@@ -326,8 +349,8 @@ const EmployeeTable = ({ onUpdateEmployee, onUpdateTotalEmployees }) => {
             <div className="mb-2">
               <label>Division:</label>
               <select
-                value={selectedEmployee?.division.name}
-                className="w-full mt-2 p-2 border rounded dark:text-black "
+                value={selectedEmployee?.division.id || ""}
+                className="w-full mt-2 p-2 border rounded dark:text-black"
                 onChange={(e) =>
                   setSelectedEmployee({
                     ...selectedEmployee,
@@ -335,7 +358,9 @@ const EmployeeTable = ({ onUpdateEmployee, onUpdateTotalEmployees }) => {
                   })
                 }
               >
-                <option value="">{selectedEmployee?.division.name}</option>
+                <option value="">
+                  {selectedEmployee?.division?.name || "Select division"}
+                </option>
                 {divisions.map((division) => (
                   <option key={division.id} value={division.id}>
                     {division.name}

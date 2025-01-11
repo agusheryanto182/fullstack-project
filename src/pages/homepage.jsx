@@ -26,31 +26,29 @@ export default function Homepage() {
 
   const [employees, setEmployees] = useState([]);
 
-  const [totalEmployees, setTotalEmployees] = useState(() => {
-    const storedEmployees = localStorage.getItem("employees");
-    return storedEmployees ? JSON.parse(storedEmployees).length : 1;
-  });
+  const [totalEmployees, setTotalEmployees] = useState(employees.length);
 
   useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        const response = await getEmployees();
-        console.log(response);
-        setEmployees(response.data.data.employees);
-      } catch (error) {
-        console.error(error);
-      }
-    };
     fetchEmployees();
   }, []);
+
+  const fetchEmployees = async () => {
+    try {
+      const response = await getEmployees();
+      setEmployees(response.data.data.employees);
+      setTotalEmployees(response.data.data.employees.length);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     localStorage.setItem("activeTab", tab);
   };
 
-  const handleAddEmployee = (newEmployee) => {
-    setEmployees((prevEmployees) => [...prevEmployees, newEmployee]);
+  const handleAddEmployee = () => {
+    fetchEmployees();
   };
 
   const handleUpdateEmployee = (updatedEmployee) => {
