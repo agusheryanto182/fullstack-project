@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-family: "Poppins", sans-serif;
+  --line-height: 1.5;
+  --color: #000;
+  --background-color: #fff;
+  --maroon: #6a1039;
+  --hover-maroon: #a3174d;
+  --light-maroon: #f9f5ff;
+}
+
+.dark {
+  --color: rgba(255, 255, 255, 0.87);
+  --background-color: #000000;
+}
+
+body {
+  font-family: var(--font-family);
+  line-height: var(--line-height);
+  color: var(--color);
+  background-color: var(--background-color);
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
