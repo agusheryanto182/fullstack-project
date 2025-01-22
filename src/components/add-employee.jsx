@@ -9,7 +9,6 @@ export default function AddEmployee({
 }) {
   const [showPopup, setShowPopup] = useState(false);
   const [newEmployee, setNewEmployee] = useState({
-    id: "",
     name: "",
     image: "",
     phone: "",
@@ -50,16 +49,29 @@ export default function AddEmployee({
       return;
     }
 
+    const formData = new FormData();
+    formData.append("name", newEmployee.name);
+    formData.append("phone", newEmployee.phone);
+    formData.append("division", newEmployee.division);
+    formData.append("position", newEmployee.position);
+
+    if (newEmployee.image) {
+      formData.append("image", newEmployee.image);
+    }
+
+    console.log("newEmployee", newEmployee);
+
+    console.log("formdata", formData);
+
     setAlertMessage("Data sucessfully added");
     setAlertType("success");
 
     try {
-      await createEmployee(newEmployee);
+      await createEmployee(formData);
       onTotalEmployees(totalEmployees + 1);
       setShowPopup(false);
       onAddEmployee();
       setNewEmployee({
-        id: "",
         name: "",
         image: "",
         phone: "",
@@ -150,20 +162,20 @@ export default function AddEmployee({
               <input
                 type="file"
                 name="image"
+                accept="image/*"
                 onChange={(e) => {
                   const file = e.target.files[0];
-                  const reader = new FileReader();
-                  reader.onloadend = () => {
+                  if (file) {
                     setNewEmployee((prev) => ({
                       ...prev,
-                      image: reader.result,
+                      image: file,
                     }));
-                  };
-                  reader.readAsDataURL(file);
+                  }
                 }}
                 className="w-full border p-2 rounded dark:text-black"
               />
             </div>
+
             <div className="mb-2">
               <label>Phone:</label>
               <input

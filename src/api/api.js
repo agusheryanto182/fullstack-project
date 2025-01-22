@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: import.meta.env.VITE_API_BASE_URL + "/api",
 });
 
 api.interceptors.request.use(
@@ -30,6 +30,17 @@ export const getDivisions = (params) => api.get("/divisions", { params });
 // employees
 export const getEmployees = (params) => api.get("/employees", { params });
 export const createEmployee = (employee) => api.post("/employees", employee);
-export const updateEmployee = (id, employee) =>
-  api.put(`/employees/${id}`, employee);
+export const updateEmployeeWithJson = (id, employee) =>
+  api.put(`/employees/${id}`, employee, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+export const updateEmployeeWithFormData = (id, employee) =>
+  api.post(`/employees/${id}`, employee, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 export const deleteEmployee = (id) => api.delete(`/employees/${id}`);

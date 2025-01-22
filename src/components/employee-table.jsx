@@ -3,8 +3,14 @@ import { useSearchParams } from "react-router-dom";
 import Pagination from "./pagination";
 import SearchBar from "./search-bar";
 import CustomAlert from "./custom-alert";
-import { getEmployees, updateEmployee, deleteEmployee } from "../api/api";
-import axios from "axios";
+import {
+  getEmployees,
+  updateEmployeeWithJson,
+  updateEmployeeWithFormData,
+  deleteEmployee,
+} from "../api/api";
+
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 const EmployeeTable = ({
   onUpdateEmployee,
@@ -100,34 +106,23 @@ const EmployeeTable = ({
     try {
       const hasImage = updatedEmployee.image;
 
-      let response;
       if (hasImage) {
         const formData = new FormData();
-        for (const key in updatedEmployee) {
-          formData.append(key, updatedEmployee[key]);
-        }
+        formData.append("name", updatedEmployee.name);
+        formData.append("phone", updatedEmployee.phone);
+        formData.append("division", updatedEmployee.division.id);
+        formData.append("position", updatedEmployee.position);
+        formData.append("image", updatedEmployee.image);
 
-        response = await axios.post(
-          `https://www.sukisushi.works/api/employees/${updatedEmployee.id}`,
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+        await updateEmployeeWithFormData(updatedEmployee.id, formData);
       } else {
-        response = await axios.put(
-          `https://www.sukisushi.works/api/employees/${updatedEmployee.id}`,
-          updatedEmployee,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+        await updateEmployeeWithJson(updatedEmployee.id, {
+          id: updatedEmployee.id,
+          name: updatedEmployee.name,
+          phone: updatedEmployee.phone,
+          division: updatedEmployee.division.id,
+          position: updatedEmployee.position,
+        });
       }
       const updatedEmployees = employees.map((employee) =>
         employee.id === updatedEmployee.id
@@ -227,7 +222,7 @@ const EmployeeTable = ({
                   <span className="h-8 w-8 bg-gray-200 dark:bg-white dark:text-black rounded-full flex items-center justify-center text-sm font-medium text-white mr-3">
                     {employee.image ? (
                       <img
-                        src={employee.image}
+                        src={`${API_URL}/storage/${employee.image}`}
                         alt={employee.name}
                         className="w-8 h-8 rounded-full"
                       />
@@ -349,14 +344,17 @@ const EmployeeTable = ({
             <div className="mb-2">
               <label>Division:</label>
               <select
-                value={selectedEmployee?.division.id || ""}
+                value={selectedEmployee?.division?.id || ""}
                 className="w-full mt-2 p-2 border rounded dark:text-black"
-                onChange={(e) =>
+                onChange={(e) => {
+                  const selectedDivision = divisions.find(
+                    (division) => division.id === e.target.value
+                  );
                   setSelectedEmployee({
                     ...selectedEmployee,
-                    division: e.target.value,
-                  })
-                }
+                    division: selectedDivision || null,
+                  });
+                }}
               >
                 <option value="">
                   {selectedEmployee?.division?.name || "Select division"}
@@ -368,6 +366,7 @@ const EmployeeTable = ({
                 ))}
               </select>
             </div>
+
             <div className="mb-2">
               <label>Position:</label>
               <input
