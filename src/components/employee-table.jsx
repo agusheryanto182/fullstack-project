@@ -113,6 +113,7 @@ const EmployeeTable = ({
         formData.append("division", updatedEmployee.division.id);
         formData.append("position", updatedEmployee.position);
         formData.append("image", updatedEmployee.image);
+        formData.append("_method", "PUT");
 
         await updateEmployeeWithFormData(updatedEmployee.id, formData);
       } else {
@@ -135,6 +136,7 @@ const EmployeeTable = ({
       setShowEditPopup(false);
 
       onUpdateEmployee(updatedEmployees);
+      fetchEmployees();
     } catch (error) {
       console.log(error);
       setAlertMessage("Terjadi kesalahan saat memperbarui data");
@@ -322,7 +324,7 @@ const EmployeeTable = ({
                 onChange={(e) =>
                   setSelectedEmployee({
                     ...selectedEmployee,
-                    image: URL.createObjectURL(e.target.files[0]),
+                    image: e.target.files[0],
                   })
                 }
               />
